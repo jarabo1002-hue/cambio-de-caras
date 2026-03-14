@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Swap Ético - Múltiples Caras</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .main-container {
+            padding: 2rem 0;
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header-section h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header-section .subtitle {
+            color: #a5b4fc;
+            font-size: 1.1rem;
+        }
+
+        .ethical-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid var(--success-color);
+            border-radius: 50px;
+            padding: 0.5rem 1.5rem;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        .upload-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1rem;
+            padding: 2rem;
+            height: 100%;
+        }
+
+        .upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 0.75rem;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary-color);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .upload-area.has-image {
+            border-style: solid;
+            border-color: var(--success-color);
+        }
+
+        .upload-area img {
+            max-width: 100%;
+            max-height: 250px;
+            border-radius: 0.5rem;
+            object-fit: contain;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .swap-button {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            padding: 1rem 3rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 0.75rem;
+            color: white;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .swap-button:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+        }
+
+        .swap-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .result-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .result-section.show {
+            display: block;
+        }
+
+        .result-image {
+            max-width: 100%;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .consent-checkbox {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid var(--warning-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .age-verification {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .age-modal {
+            background: linear-gradient(135deg, #1e1b4b, #312e81);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1.5rem;
+            padding: 3rem;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .terms-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .terms-section h5 {
+            color: var(--primary-color);
+            margin-top: 1rem;
+        }
+
+        .terms-section h5:first-child {
+            margin-top: 0;
+        }
+
+        .loading-spinner {
+            display: none;
+        }
+
+        .loading-spinner.show {
+            display: block;
+        }
+
+        .disclaimer-banner {
+            background: rgba(239, 68, 68, 0.2);
+            border-left: 4px solid var(--danger-color);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        .watermark-info {
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid var(--primary-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+            color: rgba(255, 255, 255, 0.6);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Estilos para detección de caras */
+        .faces-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .face-card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .face-card:hover {
+            border-color: var(--primary-color);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .face-card.selected {
+            border-color: var(--success-color);
+            background: rgba(16, 185, 129, 0.2);
+        }
+
+        .face-card .face-number {
+            background: var(--primary-color);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
+            font-weight: bold;
+        }
+
+        .face-card img {
+            width: 100%;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .face-card .face-info {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .face-card .assign-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            margin-top: 0.5rem;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .face-card .assign-btn:hover {
+            background: var(--secondary-color);
+        }
+
+        .face-card .assigned-badge {
+            background: var(--success-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            display: inline-block;
+        }
+
+        .source-images-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .source-images-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .source-image-item {
+            position: relative;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .source-image-item:hover {
+            transform: scale(1.05);
+            border-color: var(--primary-color);
+        }
+
+        .source-image-item img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+        }
+
+        .source-image-item .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(239, 68, 68, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+
+        .add-source-btn {
+            height: 120px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .add-source-btn:hover {
+            border-color: var(--primary-color);
+            background: rgba(99, 102, 241, 0.1);
+            color: white;
+        }
+
+        .add-source-btn i {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .steps-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.5);
+            transition: all 0.3s;
+        }
+
+        .step.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .step.completed {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .step-number {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .step.active .step-number,
+        .step.completed .step-number {
+            background: white;
+        }
+
+        @media (max-width: 768px) {
+            .header-section h1 {
+                font-size: 1.8rem;
+            }
+
+            .upload-card {
+                margin-bottom: 1rem;
+            }
+
+            .faces-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Verificación de Edad -->
+    <div id="ageVerification" class="age-verification">
+        <div class="age-modal">
+            <i class="bi bi-shield-lock" style="font-size: 4rem; color: var(--primary-color);"></i>
+            <h2 class="mt-3">Verificación de Edad</h2>
+            <p class="text-muted">Debes ser mayor de 18 años para usar esta aplicación</p>
+            <div class="mt-4">
+                <button class="btn btn-success btn-lg me-3" onclick="confirmAge(true)">
+                    <i class="bi bi-check-circle"></i> Soy mayor de 18
+                </button>
+                <button class="btn btn-secondary btn-lg" onclick="confirmAge(false)">
+                    <i class="bi bi-x-circle"></i> Soy menor
+                </button>
+            </div>
+            <p class="mt-3 text-muted small">
+                Esta aplicación es solo para adultos debido a la naturaleza de la tecnología de face swap.
+            </p>
+        </div>
+    </div>
+
+    <div class="container main-container">
+        <!-- Header -->
+        <div class="header-section">
+            <h1><i class="bi bi-people"></i> Face Swap Ético - Múltiples Caras</h1>
+            <p class="subtitle">Sube la imagen destino, detecta las caras y asigna cada cara de origen</p>
+            <div class="ethical-badge">
+                <i class="bi bi-shield-check"></i>
+                <span>100% Ético - Consentimiento Requerido - Marca de Agua Incluida</span>
+            </div>
+
+            <!-- Steps Indicator -->
+            <div class="steps-indicator">
+                <div class="step active" id="step1">
+                    <span class="step-number">1</span>
+                    <span>Imagen Destino</span>
+                </div>
+                <div class="step" id="step2">
+                    <span class="step-number">2</span>
+                    <span>Asignar Caras</span>
+                </div>
+                <div class="step" id="step3">
+                    <span class="step-number">3</span>
+                    <span>Resultado</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Disclaimer -->
+        <div class="disclaimer-banner">
+            <i class="bi bi-exclamation-triangle"></i>
+            <strong>Importante:</strong> Solo usa imágenes de personas que han dado su consentimiento explícito.
+            Prohibido usar para contenido ilegal, acoso, o engaño.
+        </div>
+
+        <!-- Paso 1: Subir imagen destino -->
+        <div id="step1Section">
+            <div class="row">
+                <div class="col-md-8 mx-auto">
+                    <div class="upload-card">
+                        <h4 class="mb-3">
+                            <i class="bi bi-image"></i> Paso 1: Sube la Imagen Destino
+                        </h4>
+                        <p class="text-muted small">La imagen donde quieres cambiar las caras</p>
+                        <div class="upload-area" id="targetUpload"
+                            onclick="document.getElementById('targetInput').click()">
+                            <input type="file" id="targetInput" accept="image/*" hidden
+                                onchange="handleTargetImage(event)">
+                            <div id="targetPlaceholder">
+                                <i class="bi bi-image upload-icon"></i>
+                                <p class="mb-0">Haz clic o arrastra una imagen aquí</p>
+                                <small class="text-muted">JPEG, PNG, WebP (Máx 10MB)</small>
+                            </div>
+                            <img id="targetPreview" style="display: none;">
+                        </div>
+                        <button class="btn btn-primary w-100 mt-3" id="detectFacesBtn" onclick="detectFaces()" disabled>
+                            <i class="bi bi-search"></i> Detectar Caras
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Paso 2: Asignar caras -->
+        <div id="step2Section" style="display: none;">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="upload-card">
+                        <h4 class="mb-3">
+                            <i class="bi bi-people"></i> Paso 2: Asignar Caras
+                        </h4>
+                        <p class="text-muted small">
+                            Se detectaron <strong id="facesCountDisplay">0</strong> caras.
+                            Sube imágenes de origen y asígnalas a cada cara.
+                        </p>
+
+                        <div class="row">
+                            <!-- Columna izquierda: Imagen destino -->
+                            <div class="col-md-5">
+                                <div class="upload-card" style="padding: 1rem;">
+                                    <h5 class="mb-3">
+                                        <i class="bi bi-image"></i> Imagen Destino
+                                    </h5>
+                                    <img id="targetPreviewStep2"
+                                        style="width: 100%; border-radius: 0.5rem; max-height: 400px; object-fit: contain; background: rgba(0,0,0,0.3);"
+                                        alt="Imagen destino">
+                                    <div id="facesDetectedInfo" class="mt-2 text-center">
+                                        <span class="badge bg-primary" id="facesBadge">0 caras detectadas</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Columna derecha: Caras y asignación -->
+                            <div class="col-md-7">
+                                <h5 class="mb-3">
+                                    <i class="bi bi-person-badge"></i> Caras Detectadas
+                                </h5>
+                                <!-- Caras detectadas -->
+                                <div class="faces-container" id="facesContainer"></div>
+
+                                <!-- Sección de imágenes de origen -->
+                                <div class="source-images-section">
+                                    <h5 class="mb-3">
+                                        <i class="bi bi-person-badge"></i> Imágenes de Origen
+                                    </h5>
+                                    <p class="text-muted small">Sube las caras que quieres usar y asígnalas a cada cara
+                                        detectada</p>
+
+                                    <div class="source-images-grid" id="sourceImagesGrid">
+                                        <div class="add-source-btn"
+                                            onclick="document.getElementById('sourceInput').click()">
+                                            <i class="bi bi-plus-circle"></i>
+                                            <small>Añadir imagen</small>
+                                        </div>
+                                        <input type="file" id="sourceInput" accept="image/*" multiple hidden
+                                            onchange="handleSourceImages(event)">
+                                    </div>
+
+                                    <div class="alert alert-info mt-3" role="alert">
+                                        <i class="bi bi-info-circle"></i>
+                                        <strong>Instrucciones:</strong>
+                                        <ol class="mb-0" style="padding-left: 1.2rem;">
+                                            <li>Sube las imágenes de origen arriba</li>
+                                            <li>Haz clic en una imagen de origen para seleccionarla (se pondrá verde)
+                                            </li>
+                                            <li>Haz clic en "Asignar cara" en la cara destino donde quieras aplicarla
+                                            </li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <button class="btn btn-outline-light me-2" onclick="resetToStep1()">
+                                <i class="bi bi-arrow-left"></i> Volver
+                            </button>
+                            <button class="btn btn-success" id="performSwapBtn" onclick="performFaceSwap()" disabled>
+                                <i class="bi bi-arrow-left-right"></i> Realizar Face Swap
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Consentimiento -->
+        <div class="consent-checkbox" id="consentSection" style="display: none;">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="consentCheck" style="width: 1.5em; height: 1.5em;">
+                <label class="form-check-label" for="consentCheck">
+                    <strong>Confirmo que tengo el consentimiento explícito de todas las personas que aparecen en estas
+                        imágenes</strong>
+                    <br>
+                    <small class="text-muted">
+                        Declaro que soy mayor de 18 años, que poseo los derechos de estas imágenes o tengo permiso
+                        explícito,
+                        y que no usaré el resultado para fines ilegales, acoso, difamación, o contenido para adultos no
+                        consensuado.
+                    </small>
+                </label>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div class="text-center mt-4 loading-spinner" id="loadingSpinner">
+            <div class="spinner-border text-light" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-3" id="loadingText">Procesando...</p>
+        </div>
+
+        <!-- Resultado -->
+        <div class="result-section" id="resultSection">
+            <h3 class="mb-3"><i class="bi bi-check-circle text-success"></i> ¡Face Swap Completado!</h3>
+            <div class="row">
+                <div class="col-md-8 mx-auto">
+                    <img id="resultImage" class="result-image" alt="Resultado del face swap">
+                </div>
+            </div>
+            <div class="text-center mt-4">
+                <a id="downloadLink" class="btn btn-success btn-lg me-2" download="face-swap-resultado.png">
+                    <i class="bi bi-download"></i> Descargar
+                </a>
+                <button class="btn btn-outline-light btn-lg" onclick="resetApp()">
+                    <i class="bi bi-arrow-clockwise"></i> Nuevo Face Swap
+                </button>
+            </div>
+            <div class="watermark-info">
+                <i class="bi bi-shield-watermark"></i>
+                <strong>Marca de agua ética aplicada:</strong> Esta imagen contiene una marca visible que indica que fue
+                generada con IA.
+                No la uses para engañar o hacer pasar por real.
+            </div>
+            <div class="disclaimer-banner mt-3">
+                <i class="bi bi-exclamation-triangle"></i>
+                <strong>Recordatorio:</strong> Usa esta imagen de forma responsable y ética.
+                Respeta la privacidad y dignidad de las personas.
+            </div>
+        </div>
+
+        <!-- Términos -->
+        <div class="terms-section" id="termsSection">
+            <h4><i class="bi bi-file-text"></i> Términos de Servicio</h4>
+            <h5>1. Consentimiento Obligatorio</h5>
+            <p>Debes tener el consentimiento explícito de todas las personas cuyas imágenes uses.</p>
+            <h5>2. Uso Prohibido</h5>
+            <p>Prohibido para: contenido pornográfico no consensuado, acoso, difamación, noticias falsas, suplantación
+                de identidad, o cualquier propósito ilegal.</p>
+            <h5>3. Marca de Agua</h5>
+            <p>Todas las imágenes generadas incluyen una marca de agua que indica que fueron creadas con IA.</p>
+            <h5>4. Responsabilidad del Usuario</h5>
+            <p>El usuario es único responsable del uso que dé a las imágenes generadas.</p>
+            <h5>5. Retención de Datos</h5>
+            <p>Las imágenes se eliminan automáticamente después del procesamiento. No almacenamos tus datos.</p>
+            <h5>6. Edad Mínima</h5>
+            <p>Debes ser mayor de 18 años para usar esta aplicación.</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p><i class="bi bi-heart"></i> Hecho con responsabilidad ética</p>
+        <p class="small">Face Swap Ético © 2026 - Tecnología para el bien, no para el daño</p>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Variables globales
+        let ageVerified = false;
+        let targetImageFile = null;
+        let sourceImages = [];
+        let detectedFaces = [];
+        let selectedSourceIndex = null;
+        let faceAssignments = {}; // { faceIndex: sourceIndex }
+
+        // Verificar edad
+        document.addEventListener('DOMContentLoaded', () => {
+            const verified = localStorage.getItem('ageVerified');
+            if (verified === 'true') {
+                document.getElementById('ageVerification').style.display = 'none';
+                ageVerified = true;
+            }
+        });
+
+        function confirmAge(isOver18) {
+            if (isOver18) {
+                localStorage.setItem('ageVerified', 'true');
+                document.getElementById('ageVerification').style.display = 'none';
+                ageVerified = true;
+            } else {
+                alert('Lo sentimos, debes ser mayor de 18 años para usar esta aplicación.');
+                window.location.href = 'https://google.com';
+            }
+        }
+
+        // Manejar imagen destino
+        function handleTargetImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+            if (!validTypes.includes(file.type)) {
+                alert('Por favor selecciona una imagen válida (JPEG, PNG, o WebP)');
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                alert('La imagen no puede superar los 10MB');
+                return;
+            }
+
+            targetImageFile = file;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('targetPreview').src = e.target.result;
+                document.getElementById('targetPreview').style.display = 'block';
+                document.getElementById('targetPlaceholder').style.display = 'none';
+                document.getElementById('targetUpload').classList.add('has-image');
+                document.getElementById('detectFacesBtn').disabled = false;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Detectar caras
+        async function detectFaces() {
+            if (!targetImageFile) {
+                alert('Por favor selecciona una imagen primero');
+                return;
+            }
+
+            document.getElementById('loadingSpinner').classList.add('show');
+            document.getElementById('loadingText').textContent = 'Detectando caras...';
+
+            const formData = new FormData();
+            formData.append('image', targetImageFile);
+
+            try {
+                const response = await fetch('/api/detect-faces', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error detectando caras');
+                }
+
+                detectedFaces = data.faces;
+                document.getElementById('facesCountDisplay').textContent = data.facesCount;
+                document.getElementById('facesBadge').textContent = `${data.facesCount} cara(s) detectada(s)`;
+
+                if (data.facesCount === 0) {
+                    alert('No se detectaron caras en la imagen. Por favor usa una imagen con caras claramente visibles.');
+                    return;
+                }
+
+                // Copiar imagen al preview del paso 2
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('targetPreviewStep2').src = e.target.result;
+                };
+                reader.readAsDataURL(targetImageFile);
+
+                // Mostrar caras detectadas
+                renderFaces(data);
+
+                // Actualizar UI
+                document.getElementById('step1Section').style.display = 'none';
+                document.getElementById('step2Section').style.display = 'block';
+                document.getElementById('consentSection').style.display = 'block';
+
+                updateSteps(2);
+
+            } catch (error) {
+                alert('Error: ' + error.message);
+                console.error('Error:', error);
+            } finally {
+                document.getElementById('loadingSpinner').classList.remove('show');
+            }
+        }
+
+        // Renderizar caras detectadas
+        function renderFaces(data) {
+            const container = document.getElementById('facesContainer');
+            container.innerHTML = '';
+
+            data.faces.forEach((face, index) => {
+                const card = document.createElement('div');
+                card.className = 'face-card';
+                card.id = `face-card-${index}`;
+
+                const bbox = face.bbox;
+                const assignedSource = faceAssignments[index];
+                const isAssigned = assignedSource !== undefined;
+
+                card.innerHTML = `
+                    <div class="face-number">${index + 1}</div>
+                    <div id="face-preview-${index}" 
+                         style="width: 100px; height: 100px; margin: 0 auto; border-radius: 8px; background: #444; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                        <span style="color: #888; font-size: 12px;">Cargando...</span>
+                    </div>
+                    <div class="face-info" style="margin-top: 0.5rem;">
+                        <small><strong>Cara #${index + 1}</strong></small><br>
+                        <small>Pos: (${bbox.x}, ${bbox.y})</small><br>
+                        <small>${bbox.width}x${bbox.height}px</small>
+                    </div>
+                    <button class="assign-btn" onclick="assignSourceToFace(${index})" 
+                        ${isAssigned ? 'disabled' : ''}
+                        style="${isAssigned ? 'opacity:1; cursor:default;' : 'opacity:0.5; cursor: not-allowed;'}">
+                        <i class="bi ${isAssigned ? 'bi-check-circle' : 'bi-person-check'}"></i> 
+                        ${isAssigned ? 'Asignada' : 'Asignar cara'}
+                    </button>
+                    ${isAssigned ? '<span class="assigned-badge"><i class="bi bi-check"></i> Asignada</span>' : ''}
+                `;
+                container.appendChild(card);
+            });
+
+            // Dibujar las miniaturas después de renderizar
+            setTimeout(() => {
+                renderFacePreviews(data);
+            }, 200);
+        }
+
+        // Renderizar vista previa de las caras
+        function renderFacePreviews(data) {
+            // Leer la imagen de destino como DataURL
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = new Image();
+                img.onload = function () {
+                    data.faces.forEach((face, index) => {
+                        const previewDiv = document.getElementById(`face-preview-${index}`);
+                        if (!previewDiv) return;
+
+                        const bbox = face.bbox;
+
+                        // Calcular coordenadas con margen
+                        const margin = 15;
+                        let x = Math.max(0, bbox.x - margin);
+                        let y = Math.max(0, bbox.y - margin);
+                        let w = bbox.width + margin * 2;
+                        let h = bbox.height + margin * 2;
+
+                        // Crear canvas para el crop
+                        const canvas = document.createElement('canvas');
+                        canvas.width = 100;
+                        canvas.height = 100;
+                        const ctx = canvas.getContext('2d');
+
+                        // Dibujar fondo
+                        ctx.fillStyle = '#2d2d2d';
+                        ctx.fillRect(0, 0, 100, 100);
+
+                        // Calcular escala para fit
+                        const scale = Math.min(100 / w, 100 / h);
+                        const scaledW = w * scale;
+                        const scaledH = h * scale;
+                        const offsetX = (100 - scaledW) / 2;
+                        const offsetY = (100 - scaledH) / 2;
+
+                        // Dibujar crop de la cara
+                        try {
+                            ctx.drawImage(img, x, y, w, h, offsetX, offsetY, scaledW, scaledH);
+                        } catch (err) {
+                            console.error('Error al dibujar:', err);
+                        }
+
+                        // Limpiar el div y añadir el canvas
+                        previewDiv.innerHTML = '';
+                        previewDiv.appendChild(canvas);
+                    });
+                };
+                img.src = e.target.result;
+            };
+
+            if (targetImageFile) {
+                reader.readAsDataURL(targetImageFile);
+            }
+        }
+
+        // Manejar imágenes de origen
+        function handleSourceImages(event) {
+            const files = Array.from(event.target.files);
+
+            for (const file of files) {
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+                if (!validTypes.includes(file.type)) {
+                    alert(`La imagen "${file.name}" no es válida.`);
+                    continue;
+                }
+
+                if (file.size > 10 * 1024 * 1024) {
+                    alert(`La imagen "${file.name}" supera los 10MB.`);
+                    continue;
+                }
+
+                if (sourceImages.length >= 10) {
+                    alert('Máximo 10 imágenes permitidas.');
+                    break;
+                }
+
+                sourceImages.push(file);
+            }
+
+            renderSourceImages();
+            document.getElementById('sourceInput').value = '';
+        }
+
+        // Renderizar imágenes de origen
+        function renderSourceImages() {
+            const grid = document.getElementById('sourceImagesGrid');
+            const addBtn = grid.querySelector('.add-source-btn');
+
+            grid.querySelectorAll('.source-image-item').forEach(item => item.remove());
+
+            sourceImages.forEach((file, index) => {
+                const item = document.createElement('div');
+                item.className = 'source-image-item';
+                item.onclick = () => selectSourceImage(index);
+                if (selectedSourceIndex === index) {
+                    item.style.borderColor = 'var(--success-color)';
+                    item.style.boxShadow = '0 0 10px var(--success-color)';
+                }
+                item.innerHTML = `
+                    <button class="remove-btn" onclick="event.stopPropagation(); removeSourceImage(${index})">
+                        <i class="bi bi-x"></i>
+                    </button>
+                    <img src="${URL.createObjectURL(file)}" alt="Origen ${index + 1}">
+                `;
+                grid.insertBefore(item, addBtn);
+            });
+        }
+
+        // Seleccionar imagen de origen
+        function selectSourceImage(index) {
+            selectedSourceIndex = index;
+            renderSourceImages();
+
+            // Mostrar mensaje
+            const info = document.querySelector('.alert-info');
+            info.innerHTML = `
+                <i class="bi bi-info-circle"></i>
+                <strong>Imagen seleccionada:</strong> Ahora haz clic en "Asignar cara" en la cara destino donde quieras aplicar esta imagen.
+            `;
+        }
+
+        // Eliminar imagen de origen
+        function removeSourceImage(index) {
+            sourceImages.splice(index, 1);
+            if (selectedSourceIndex === index) {
+                selectedSourceIndex = null;
+            } else if (selectedSourceIndex > index) {
+                selectedSourceIndex--;
+            }
+            renderSourceImages();
+        }
+
+        // Asignar imagen de origen a una cara
+        function assignSourceToFace(faceIndex) {
+            if (selectedSourceIndex === null) {
+                alert('Primero selecciona una imagen de origen (haz clic en ella)');
+                return;
+            }
+
+            // Si ya está asignada, quitar la asignación (toggle)
+            if (faceAssignments[faceIndex] !== undefined) {
+                delete faceAssignments[faceIndex];
+
+                // Actualizar UI de la cara
+                const card = document.getElementById(`face-card-${faceIndex}`);
+                card.classList.remove('selected');
+                card.querySelector('.assign-btn').innerHTML = '<i class="bi bi-person-check"></i> Asignar cara';
+                card.querySelector('.assign-btn').disabled = false;
+                card.querySelector('.assign-btn').style.opacity = '0.5';
+                card.querySelector('.assign-btn').style.cursor = 'not-allowed';
+
+                // Quitar badge
+                const badge = card.querySelector('.assigned-badge');
+                if (badge) badge.remove();
+
+                const info = document.querySelector('.alert-info');
+                info.innerHTML = `
+                    <i class="bi bi-x-circle"></i>
+                    <strong>Asignación quitada.</strong> Cara #${faceIndex + 1} ya no será modificada.
+                `;
+            } else {
+                // Asignar nueva
+                faceAssignments[faceIndex] = selectedSourceIndex;
+
+                // Actualizar UI de la cara
+                const card = document.getElementById(`face-card-${faceIndex}`);
+                card.classList.add('selected');
+                card.querySelector('.assign-btn').innerHTML = '<i class="bi bi-check-circle"></i> Asignada';
+                card.querySelector('.assign-btn').disabled = true;
+                card.querySelector('.assign-btn').style.opacity = '1';
+                card.querySelector('.assign-btn').style.cursor = 'default';
+
+                if (!card.querySelector('.assigned-badge')) {
+                    const badge = document.createElement('span');
+                    badge.className = 'assigned-badge';
+                    badge.innerHTML = '<i class="bi bi-check"></i> Asignada';
+                    badge.style.display = 'inline-block';
+                    badge.style.marginTop = '0.5rem';
+                    card.querySelector('.face-info').insertAdjacentElement('afterend', badge);
+                }
+
+                const info = document.querySelector('.alert-info');
+                info.innerHTML = `
+                    <i class="bi bi-check-circle"></i>
+                    <strong>¡Asignada!</strong> Cara #${faceIndex + 1} será cambiada.
+                    ${Object.keys(faceAssignments).length < detectedFaces.length ? 'Continúa asignando más caras o haz clic en "Realizar Face Swap".' : '¡Todas las caras asignadas!'}
+                `;
+
+                // Deseleccionar imagen de origen después de asignar
+                selectedSourceIndex = null;
+                renderSourceImages();
+            }
+
+            // Verificar si hay al menos una cara asignada
+            checkAllFacesAssigned();
+        }
+
+        // Verificar si todas las caras están asignadas
+        function checkAllFacesAssigned() {
+            // Ahora permitimos hacer face swap con al menos UNA cara asignada
+            const hasAtLeastOneAssigned = Object.keys(faceAssignments).length > 0;
+            document.getElementById('performSwapBtn').disabled = !hasAtLeastOneAssigned;
+
+            // Actualizar texto del botón
+            const assignedCount = Object.keys(faceAssignments).length;
+            const totalCount = detectedFaces.length;
+            const btn = document.getElementById('performSwapBtn');
+
+            if (assignedCount === 0) {
+                btn.innerHTML = '<i class="bi bi-arrow-left-right"></i> Realizar Face Swap';
+                btn.disabled = true;
+            } else if (assignedCount < totalCount) {
+                btn.innerHTML = `<i class="bi bi-arrow-left-right"></i> Realizar Face Swap (${assignedCount}/${totalCount} caras)`;
+            } else {
+                btn.innerHTML = '<i class="bi bi-check-circle"></i> ¡Listo para Face Swap!';
+                btn.classList.add('btn-success');
+            }
+        }
+
+        // Realizar face swap
+        async function performFaceSwap() {
+            const consentCheck = document.getElementById('consentCheck');
+            if (!consentCheck.checked) {
+                alert('Debes confirmar el consentimiento para continuar');
+                return;
+            }
+
+            if (Object.keys(faceAssignments).length === 0) {
+                alert('Por favor asigna al menos una cara');
+                return;
+            }
+
+            document.getElementById('loadingSpinner').classList.add('show');
+            document.getElementById('loadingText').textContent = 'Realizando face swap...';
+
+            const formData = new FormData();
+
+            // Obtener solo las imágenes de origen que se van a usar
+            const usedSourceIndices = new Set(Object.values(faceAssignments));
+            const sourcesToUse = Array.from(usedSourceIndices).map(idx => sourceImages[idx]);
+
+            // Crear mapeo actualizado con los nuevos índices
+            const updatedMapping = {};
+            const newIndexMap = {};
+            let newIdx = 0;
+            usedSourceIndices.forEach(oldIdx => {
+                newIndexMap[oldIdx] = newIdx;
+                newIdx++;
+            });
+
+            // Actualizar mapeo con nuevos índices
+            Object.entries(faceAssignments).forEach(([faceIdx, sourceIdx]) => {
+                updatedMapping[faceIdx] = newIndexMap[sourceIdx];
+            });
+
+            // Añadir solo las imágenes necesarias
+            sourcesToUse.forEach((file) => {
+                formData.append('sourceImages', file);
+            });
+
+            formData.append('targetImage', targetImageFile);
+            formData.append('consentConfirmed', 'true');
+            formData.append('faceMapping', JSON.stringify(updatedMapping));
+
+            try {
+                const response = await fetch('/api/face-swap-multi', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error procesando las imágenes');
+                }
+
+                showResult(data);
+
+            } catch (error) {
+                alert('Error: ' + error.message);
+                console.error('Error:', error);
+            } finally {
+                document.getElementById('loadingSpinner').classList.remove('show');
+            }
+        }
+
+        // Mostrar resultado
+        function showResult(data) {
+            document.getElementById('step2Section').style.display = 'none';
+            document.getElementById('consentSection').style.display = 'none';
+            document.getElementById('resultSection').classList.add('show');
+
+            document.getElementById('resultImage').src = data.resultUrl;
+            document.getElementById('downloadLink').href = data.resultUrl;
+
+            updateSteps(3);
+        }
+
+        // Resetear a paso 1
+        function resetToStep1() {
+            document.getElementById('step1Section').style.display = 'block';
+            document.getElementById('step2Section').style.display = 'none';
+            updateSteps(1);
+        }
+
+        // Actualizar indicador de pasos
+        function updateSteps(currentStep) {
+            for (let i = 1; i <= 3; i++) {
+                const step = document.getElementById(`step${i}`);
+                step.classList.remove('active', 'completed');
+                if (i < currentStep) {
+                    step.classList.add('completed');
+                } else if (i === currentStep) {
+                    step.classList.add('active');
+                }
+            }
+        }
+
+        // Resetear aplicación completa
+        function resetApp() {
+            targetImageFile = null;
+            sourceImages = [];
+            detectedFaces = [];
+            faceAssignments = {};
+            selectedSourceIndex = null;
+
+            document.getElementById('targetInput').value = '';
+            document.getElementById('sourceInput').value = '';
+            document.getElementById('targetPreview').style.display = 'none';
+            document.getElementById('targetPlaceholder').style.display = 'block';
+            document.getElementById('targetUpload').classList.remove('has-image');
+            document.getElementById('detectFacesBtn').disabled = true;
+
+            document.getElementById('step1Section').style.display = 'block';
+            document.getElementById('step2Section').style.display = 'none';
+            document.getElementById('consentSection').style.display = 'none';
+            document.getElementById('resultSection').classList.remove('show');
+
+            document.getElementById('facesContainer').innerHTML = '';
+            document.getElementById('sourceImagesGrid').querySelectorAll('.source-image-item').forEach(item => item.remove());
+
+            updateSteps(1);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</body>
+
+</html>

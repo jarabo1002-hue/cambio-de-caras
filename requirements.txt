@@ -1,0 +1,12 @@
+# Dependencias de Python para Face Swap Ético
+# ============================================
+
+# Procesamiento de imágenes y face swap
+insightface>=0.7.3
+opencv-python>=4.8.0
+numpy>=1.24.0
+pillow>=10.0.0
+
+# Opcional: Para mejor rendimiento con GPU
+# onnxruntime-gpu>=1.16.0  # Si tienes GPU NVIDIA
+onnxruntime>=1.16.0  # Versión CPU

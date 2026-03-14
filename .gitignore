@@ -1,0 +1,38 @@
+# Node modules
+node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Archivos temporales
+uploads/
+results/
+*.tmp
+
+# Variables de entorno
+.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Modelo ONNX (grande, mejor descargarlo aparte)
+*.onnx
