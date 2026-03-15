@@ -29,8 +29,8 @@ def detect_faces(image_path):
         print(json.dumps({"error": "insightface no está instalado"}))
         sys.exit(1)
 
-    # Inicializar detector
-    app = FaceAnalysis(providers=['CPUExecutionProvider'], verbose=False)
+    # Inicializar detector (usamos buffalo_s por memoria)
+    app = FaceAnalysis(name='buffalo_s', providers=['CPUExecutionProvider'], verbose=False)
     app.prepare(ctx_id=0, det_size=(640, 640))
 
     # Leer imagen

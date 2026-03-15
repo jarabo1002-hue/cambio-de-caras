@@ -124,7 +124,7 @@ def process_single_face_swap(source_path, target_path, output_path, app, swapper
         sys.exit(1)
 
     print("⏳ Inicializando detector de caras...")
-    app = FaceAnalysis(providers=['CPUExecutionProvider'])
+    app = FaceAnalysis(name='buffalo_s', providers=['CPUExecutionProvider'])
     app.prepare(ctx_id=0, det_size=(640, 640))
 
     print("⏳ Cargando modelo de face swapper...")
@@ -234,7 +234,7 @@ def process_multi_face_swap(source_paths, target_path, output_path, face_mapping
         sys.exit(1)
 
     print("⏳ Inicializando detector de caras...")
-    app = FaceAnalysis(providers=['CPUExecutionProvider'])
+    app = FaceAnalysis(name='buffalo_s', providers=['CPUExecutionProvider'])
     app.prepare(ctx_id=0, det_size=(640, 640))
 
     print("⏳ Cargando modelo de face swapper...")
