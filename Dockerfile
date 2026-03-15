@@ -7,26 +7,28 @@ RUN apt-get update && apt-get install -y \
                 libglib2.0-0 \
                     libsm6 \
                         libxext6 \
-                            && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-                                && apt-get install -y nodejs \
-                                    && rm -rf /var/lib/apt/lists/*
+                            build-essential \
+                                python3-dev \
+                                    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+                                        && apt-get install -y nodejs \
+                                            && rm -rf /var/lib/apt/lists/*
 
-                                    WORKDIR /app
+                                            WORKDIR /app
 
-                                    COPY package*.json ./
-                                    COPY requirements.txt ./
+                                            COPY package*.json ./
+                                            COPY requirements.txt ./
 
-                                    RUN npm install --production
-                                    RUN pip install --no-cache-dir -r requirements.txt
+                                            RUN npm install --production
+                                            RUN pip install --no-cache-dir -r requirements.txt
 
-                                    COPY download_model.py .
-                                    RUN python download_model.py
+                                            COPY download_model.py .
+                                            RUN python download_model.py
 
-                                    COPY . .
+                                            COPY . .
 
-                                    RUN mkdir -p uploads results && chmod 777 uploads results
+                                            RUN mkdir -p uploads results && chmod 777 uploads results
 
-                                    EXPOSE 3000
+                                            EXPOSE 3000
 
-                                    CMD ["npm", "start"]
-                                    
+                                            CMD ["npm", "start"]
+                                            
