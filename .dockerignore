@@ -1,0 +1,10 @@
+node_modules
+npm-debug.log
+uploads/*
+results/*
+.git
+.env
+.vscode
+*.onnx
+# El modelo ONNX lo manejaremos aparte o lo quitaremos de aquí si quieres subirlo
+# pero por ahora lo ignoramos para que el build sea rápido.
