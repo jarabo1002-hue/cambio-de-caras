@@ -1,27 +1,27 @@
 {
-  "version": 2,
-  "name": "cambio-de-caras-frontend",
-  "builds": [
-    {
-      "src": "public/**/*",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "https://face-swap-app.onrender.com/api/$1"
-    },
-    {
-      "src": "/results/(.*)",
-      "dest": "https://face-swap-app.onrender.com/results/$1"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/public/$1"
-    }
-  ]
+    "version": 2,
+    "name": "cambio-de-caras-frontend",
+    "builds": [
+          {
+                  "src": "public/**/*",
+                  "use": "@vercel/static"
+          }
+    ],
+    "routes": [
+          {
+                  "src": "/api/(.*)",
+                  "dest": "https://face-swap-app-9dz7.onrender.com/api/$1"
+          },
+          {
+                  "src": "/results/(.*)",
+                  "dest": "https://face-swap-app-9dz7.onrender.com/results/$1"
+          },
+          {
+                  "handle": "filesystem"
+          },
+          {
+                  "src": "/(.*)",
+                  "dest": "/public/$1"
+          }
+    ]
 }
