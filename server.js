@@ -190,7 +190,7 @@ app.post('/api/face-swap-multi', upload.fields([
     const sourcesArg = sourceImagePaths.join(',');
     const command = `python3 "${pythonScript}" multi "${sourcesArg}" "${targetImagePath}" "${resultPath}" ${mappingArg}`;
 
-    exec(command, (error, stdout, stderr) => {
+    exec(command, { timeout: 300000, maxBuffer: 1024 * 1024 * 50 }, (error, stdout, stderr) => {
       // Limpiar archivos temporales de upload
       try {
         sourceImagePaths.forEach(p => fs.unlinkSync(p));

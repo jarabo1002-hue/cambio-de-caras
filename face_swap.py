@@ -195,8 +195,8 @@ def process_single_face_swap(source_path, target_path, output_path, app, swapper
     print("🔄 Aplicando face swap...")
     result = swapper.get(target_img, target_face, source_face, paste_back=True)
 
-    temp_output = output_path.replace('.png', '_temp.png')
-    cv2.imwrite(temp_output, result, [cv2.IMWRITE_PNG_COMPRESSION, 0])
+    temp_output = output_path.replace('.png', '_temp.jpg')
+    cv2.imwrite(temp_output, result, [cv2.IMWRITE_JPEG_QUALITY, 90])
 
     print("💧 Añadiendo marca de agua ética...")
     add_watermark(temp_output, output_path)
@@ -323,8 +323,8 @@ def process_multi_face_swap(source_paths, target_path, output_path, face_mapping
         result = swapper.get(result, target_face, source_face, paste_back=True)
 
     # Guardar resultado con máxima calidad
-    temp_output = output_path.replace('.png', '_temp.png')
-    cv2.imwrite(temp_output, result, [cv2.IMWRITE_PNG_COMPRESSION, 0])
+    temp_output = output_path.replace('.png', '_temp.jpg')
+    cv2.imwrite(temp_output, result, [cv2.IMWRITE_JPEG_QUALITY, 90])
 
     print("💧 Añadiendo marca de agua ética...")
     add_watermark(temp_output, output_path)
