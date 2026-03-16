@@ -29,31 +29,40 @@ def detect_faces(image_path):
         print(json.dumps({"error": "insightface no está instalado"}))
         sys.exit(1)
 
+    # REESCALADO PARA AHORRO DE MEMORIA
+    sys.stderr.write(f"--- Iniciando detección para {image_path} ---\n")
+    
     # Inicializar detector (usamos buffalo_s por memoria)
+    sys.stderr.write("Cargando FaceAnalysis (buffalo_s)...\n")
     app = FaceAnalysis(name='buffalo_s', providers=['CPUExecutionProvider'], verbose=False)
+    
     # Reducimos det_size a 320 para ahorrar mucha RAM
+    sys.stderr.write("Preparando app (det_size=320)...\n")
     app.prepare(ctx_id=0, det_size=(320, 320))
 
     # Leer imagen
+    sys.stderr.write("Leyendo imagen con OpenCV...\n")
     img = cv2.imread(image_path)
     if img is None:
+        sys.stderr.write("Error: No se pudo leer la imagen\n")
         print(json.dumps({"error": "No se pudo leer la imagen"}))
         sys.exit(1)
 
     # REESCALADO PARA AHORRO DE MEMORIA
-    # Si la imagen es muy grande, InsightFace consumirá demasiada RAM
-    MAX_DIM = 1000
+    MAX_DIM = 800 # Bajamos de 1000 a 800 para más seguridad
     height, width = img.shape[:2]
     orig_height, orig_width = height, width
     
     if height > MAX_DIM or width > MAX_DIM:
         scale = MAX_DIM / max(height, width)
+        sys.stderr.write(f"Reescalando imagen de {width}x{height} a escala {scale:.2f}...\n")
         img = cv2.resize(img, (int(width * scale), int(height * scale)))
         height, width = img.shape[:2]
-        # sys.stderr.write(f"Resized for detection to {width}x{height}\n")
 
     # Detectar caras
+    sys.stderr.write("Ejecutando app.get(img)...\n")
     faces = app.get(img)
+    sys.stderr.write(f"Detección finalizada. Caras encontradas: {len(faces)}\n")
 
     # Ajustar coordenadas si hubo reescalado
     scale_x = orig_width / width
