@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["python310" "nodejs-18_x" "libgl"]
+
+[phases.install]
+cmds = ["pip install -r requirements.txt" "npm install --production"]
+
+[phases.build]
+cmds = ["python download_model.py"]
+
+[start]
+cmd = "node server.js"
