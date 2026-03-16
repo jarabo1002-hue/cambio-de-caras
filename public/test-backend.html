@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Backend - Face Swap</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #fff;
+        }
+        h1 { color: #6366f1; }
+        .test-section {
+            background: #16213e;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .test-btn {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-btn:hover { background: #4f46e5; }
+        .result {
+            background: #0f3460;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success { border-left: 4px solid #10b981; }
+        .error { border-left: 4px solid #ef4444; }
+        .loading { border-left: 4px solid #f59e0b; }
+        .endpoint {
+            color: #10b981;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Test Backend - Face Swap Ético</h1>
+    <p>Utiliza esta página para verificar que el backend en Render está funcionando correctamente.</p>
+    
+    <div class="test-section">
+        <h2>Endpoints disponibles</h2>
+        <p><span class="endpoint">GET /api/health</span> - Verificar estado del servidor</p>
+        <p><span class="endpoint">GET /api/terms</span> - Obtener términos de servicio</p>
+        <p><span class="endpoint">POST /api/face-swap</span> - Face swap simple (1 cara)</p>
+        <p><span class="endpoint">POST /api/face-swap-multi</span> - Face swap múltiple</p>
+        <p><span class="endpoint">POST /api/detect-faces</span> - Detectar caras en imagen</p>
+    </div>
+
+    <div class="test-section">
+        <h2>🏥 Health Check</h2>
+        <button class="test-btn" onclick="testHealth()">Probar /api/health</button>
+        <div id="health-result" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 Términos de Servicio</h2>
+        <button class="test-btn" onclick="testTerms()">Probar /api/terms</button>
+        <div id="terms-result" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔄 Face Swap Multi</h2>
+        <button class="test-btn" onclick="testFaceSwapMulti()">Probar /api/face-swap-multi (GET)</button>
+        <div id="multi-result" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Estado de Render</h2>
+        <p>Backend URL: <code style="color: #10b981;">https://face-swap-app-9dz7.onrender.com</code></p>
+        <button class="test-btn" onclick="checkRenderStatus()">Verificar estado en Render</button>
+        <div id="render-result" class="result" style="display:none;"></div>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'https://face-swap-app-9dz7.onrender.com';
+
+        async function testEndpoint(endpoint, resultId) {
+            const resultDiv = document.getElementById(resultId);
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = '⏳ Cargando...';
+
+            try {
+                const response = await fetch(`${BACKEND_URL}${endpoint}`);
+                const data = await response.json();
+                
+                resultDiv.className = 'result ' + (response.ok ? 'success' : 'error');
+                resultDiv.textContent = `Status: ${response.status} ${response.statusText}\n\n${JSON.stringify(data, null, 2)}`;
+                
+                if (response.ok) {
+                    resultDiv.textContent = `✅ Endpoint disponible!\n\nStatus: ${response.status} ${response.statusText}\n\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.textContent = `⚠️ Endpoint respondió con error\n\nStatus: ${response.status} ${response.statusText}\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Error de conexión\n\n${error.message}\n\nVerifica que:\n1. El backend esté desplegado en Render\n2. No haya bloqueos de CORS\n3. El servicio no esté en sleep mode`;
+            }
+        }
+
+        function testHealth() {
+            testEndpoint('/api/health', 'health-result');
+        }
+
+        function testTerms() {
+            testEndpoint('/api/terms', 'terms-result');
+        }
+
+        function testFaceSwapMulti() {
+            testEndpoint('/api/face-swap-multi', 'multi-result');
+        }
+
+        function checkRenderStatus() {
+            const resultDiv = document.getElementById('render-result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = '⏳ Verificando estado en Render...\n\nAbre la consola del navegador (F12) para ver más detalles.';
+
+            fetch('https://api.render.com/v1/services/face-swap-app-9dz7', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('No se pudo acceder a la API de Render (requiere autenticación)');
+                return res.json();
+            })
+            .then(data => {
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ Estado en Render:\n\n${JSON.stringify(data, null, 2)}`;
+            })
+            .catch(error => {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `⚠️ No se pudo verificar el estado en Render directamente.\n\nError: ${error.message}\n\nAlternativa:\n1. Ve a https://dashboard.render.com\n2. Inicia sesión\n3. Busca tu servicio 'face-swap-app-9dz7'\n4. Revisa los logs y estado del despliegue`;
+            });
+        }
+
+        // Auto-test al cargar
+        window.onload = () => {
+            console.log('🔧 Test Backend - Face Swap Ético');
+            console.log('Backend URL:', BACKEND_URL);
+            testHealth();
+        };
+    </script>
+</body>
+</html>
