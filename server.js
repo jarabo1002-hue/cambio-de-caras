@@ -10,6 +10,7 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Actualizado: 2026-03-16 - Forzar redepliegue en Render
 // Middleware
 app.use(cors({
   origin: true, // Aceptar cualquier origen (frontend en Vercel llama directamente)
