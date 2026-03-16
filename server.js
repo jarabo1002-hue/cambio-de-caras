@@ -12,13 +12,17 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors({
-  origin: ['https://caras-frontend.vercel.app', 'http://localhost:3000', 'http://localhost:5173'],
+  origin: true, // Aceptar cualquier origen (frontend en Vercel llama directamente)
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  credentials: false
 }));
+app.options('*', cors()); // habilitamos preflight para todas las rutas
 app.use(express.json());
 app.use(express.static('public'));
+
+// Sistema de jobs asíncronos (en memoria)
+const jobs = {};
 
 // Configuración de multer para uploads
 const storage = multer.diskStorage({
@@ -140,6 +144,15 @@ app.post('/api/face-swap', upload.fields([
 });
 
 // Endpoint para face swap múltiple
+// Endpoint para consultar estado de un job
+app.get('/api/job-status/:jobId', (req, res) => {
+  const job = jobs[req.params.jobId];
+  if (!job) {
+    return res.status(404).json({ error: 'Trabajo no encontrado' });
+  }
+  res.json(job);
+});
+
 app.post('/api/face-swap-multi', upload.fields([
   { name: 'sourceImages', maxCount: 10 },
   { name: 'targetImage', maxCount: 1 }
@@ -152,27 +165,32 @@ app.post('/api/face-swap-multi', upload.fields([
       });
     }
 
-    if (req.files.sourceImages.length === 0) {
-      return res.status(400).json({
-        error: 'Se requiere al menos una imagen de origen'
-      });
-    }
-
     const sourceImagePaths = req.files.sourceImages.map(f => f.path);
     const targetImagePath = req.files.targetImage[0].path;
-    const resultFilename = `${uuidv4()}_result.png`;
+    const jobId = uuidv4();
+    const resultFilename = `${jobId}_result.jpg`;
     const resultPath = path.join(resultsDir, resultFilename);
 
     // Verificar consentimiento
     const { consentConfirmed, faceMapping } = req.body;
     if (!consentConfirmed) {
-      // Limpiar archivos subidos
       sourceImagePaths.forEach(p => fs.unlinkSync(p));
       fs.unlinkSync(targetImagePath);
       return res.status(400).json({
         error: 'Debes confirmar que tienes consentimiento para usar estas imágenes'
       });
     }
+
+    // Inicializar job
+    jobs[jobId] = {
+      id: jobId,
+      status: 'processing',
+      progress: 10,
+      startTime: Date.now()
+    };
+
+    // Responder inmediatamente con el jobId
+    res.json({ success: true, jobId, message: 'Procesamiento iniciado' });
 
     // Preparar mapeo de caras si se proporcionó
     let mappingArg = '';
@@ -185,13 +203,13 @@ app.post('/api/face-swap-multi', upload.fields([
       }
     }
 
-    // Ejecutar script de Python para face swap múltiple
+    // Ejecutar script de Python en segundo plano
     const pythonScript = path.join(__dirname, 'face_swap.py');
     const sourcesArg = sourceImagePaths.join(',');
     const command = `python3 "${pythonScript}" multi "${sourcesArg}" "${targetImagePath}" "${resultPath}" ${mappingArg}`;
 
     exec(command, { timeout: 300000, maxBuffer: 1024 * 1024 * 50 }, (error, stdout, stderr) => {
-      // Limpiar archivos temporales de upload
+      // Limpiar archivos temporales
       try {
         sourceImagePaths.forEach(p => fs.unlinkSync(p));
         fs.unlinkSync(targetImagePath);
@@ -201,30 +219,23 @@ app.post('/api/face-swap-multi', upload.fields([
 
       if (error) {
         console.error('Error en face swap múltiple:', error);
-        console.error('STDERR:', stderr);
-        return res.status(500).json({
-          error: 'Error procesando las imágenes.',
-          details: stderr || error.message
-        });
+        jobs[jobId].status = 'error';
+        jobs[jobId].error = 'Error procesando las imágenes.';
+        jobs[jobId].details = stderr || error.message;
+        return;
       }
 
-      // Verificar que el resultado existe
       if (!fs.existsSync(resultPath)) {
-        return res.status(500).json({
-          error: 'No se generó el resultado'
-        });
+        jobs[jobId].status = 'error';
+        jobs[jobId].error = 'No se generó el resultado';
+        return;
       }
 
-      const resultUrl = `/results/${resultFilename}`;
-
-      res.json({
-        success: true,
-        message: `Face swap múltiple completado con ${req.files.sourceImages.length} imagen(es) de origen`,
-        resultUrl,
-        watermark: 'Esta imagen contiene una marca de agua ética',
-        disclaimer: 'Esta imagen fue generada con IA. No la uses para engañar o dañar a otros.',
-        facesCount: req.files.sourceImages.length
-      });
+      // Finalizar job con éxito
+      jobs[jobId].status = 'completed';
+      jobs[jobId].progress = 100;
+      jobs[jobId].resultUrl = `/results/${resultFilename}`;
+      jobs[jobId].endTime = Date.now();
     });
 
   } catch (error) {

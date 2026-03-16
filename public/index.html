@@ -1162,7 +1162,7 @@
                 formData.append('consentConfirmed', 'true');
                 formData.append('faceMapping', JSON.stringify(updatedMapping));
 
-                document.getElementById('loadingText').textContent = 'Realizando face swap...';
+                document.getElementById('loadingText').textContent = 'Iniciando procesamiento...';
 
                 const response = await fetch(`${BACKEND_URL}/api/face-swap-multi`, {
                     method: 'POST',
@@ -1172,15 +1172,46 @@
                 const data = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(data.error || 'Error procesando las imágenes');
+                    throw new Error(data.error || 'Error iniciando procesamiento');
                 }
 
-                showResult(data);
+                const jobId = data.jobId;
+                
+                // Polling para consultar el estado del job
+                let pollCount = 0;
+                const pollInterval = setInterval(async () => {
+                    pollCount++;
+                    try {
+                        const statusResponse = await fetch(`${BACKEND_URL}/api/job-status/${jobId}`);
+                        const statusData = await statusResponse.json();
+
+                        if (statusData.status === 'completed') {
+                            clearInterval(pollInterval);
+                            showResult(statusData);
+                            document.getElementById('loadingSpinner').classList.remove('show');
+                        } else if (statusData.status === 'error') {
+                            clearInterval(pollInterval);
+                            alert('Error: ' + (statusData.error || 'Error desconocido'));
+                            document.getElementById('loadingSpinner').classList.remove('show');
+                        } else {
+                            // Actualizar texto de progreso
+                            document.getElementById('loadingText').textContent = `Procesando... (${pollCount * 2}s)`;
+                        }
+                    } catch (e) {
+                        console.error('Error en polling:', e);
+                    }
+                    
+                    // Timeout de seguridad después de 5 minutos
+                    if (pollCount > 150) {
+                        clearInterval(pollInterval);
+                        alert('El proceso está tardando demasiado. Prueba con imágenes más pequeñas.');
+                        document.getElementById('loadingSpinner').classList.remove('show');
+                    }
+                }, 2000);
 
             } catch (error) {
                 alert('Error: ' + error.message);
                 console.error('Error:', error);
-            } finally {
                 document.getElementById('loadingSpinner').classList.remove('show');
             }
         }
@@ -1191,8 +1222,9 @@
             document.getElementById('consentSection').style.display = 'none';
             document.getElementById('resultSection').classList.add('show');
 
-            document.getElementById('resultImage').src = data.resultUrl;
-            document.getElementById('downloadLink').href = data.resultUrl;
+            const fullResultUrl = data.resultUrl.startsWith('http') ? data.resultUrl : (BACKEND_URL + data.resultUrl);
+            document.getElementById('resultImage').src = fullResultUrl;
+            document.getElementById('downloadLink').href = fullResultUrl;
 
             updateSteps(3);
         }
