@@ -747,6 +747,44 @@
             reader.readAsDataURL(file);
         }
 
+        // Función para redimensionar imágenes antes de subir (Ahorro de RAM en servidor)
+        async function resizeImage(file, maxDim = 800) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        if (width > height) {
+                            if (width > maxDim) {
+                                height *= maxDim / width;
+                                width = maxDim;
+                            }
+                        } else {
+                            if (height > maxDim) {
+                                width *= maxDim / height;
+                                height = maxDim;
+                            }
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        canvas.toBlob((blob) => {
+                            resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+                        }, 'image/jpeg', 0.85);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
         // Detectar caras
         async function detectFaces() {
             if (!targetImageFile) {
@@ -754,11 +792,13 @@
                 return;
             }
 
-            document.getElementById('loadingSpinner').classList.add('show');
-            document.getElementById('loadingText').textContent = 'Detectando caras...';
+            document.getElementById('loadingText').textContent = 'Preparando imagen...';
+            
+            // Redimensionar antes de enviar (Crucial para Render Free)
+            const resizedImage = await resizeImage(targetImageFile, 800);
 
             const formData = new FormData();
-            formData.append('image', targetImageFile);
+            formData.append('image', resizedImage);
 
             try {
                 const response = await fetch('/api/detect-faces', {
@@ -1083,38 +1123,40 @@
             }
 
             document.getElementById('loadingSpinner').classList.add('show');
-            document.getElementById('loadingText').textContent = 'Realizando face swap...';
-
-            const formData = new FormData();
-
-            // Obtener solo las imágenes de origen que se van a usar
-            const usedSourceIndices = new Set(Object.values(faceAssignments));
-            const sourcesToUse = Array.from(usedSourceIndices).map(idx => sourceImages[idx]);
-
-            // Crear mapeo actualizado con los nuevos índices
-            const updatedMapping = {};
-            const newIndexMap = {};
-            let newIdx = 0;
-            usedSourceIndices.forEach(oldIdx => {
-                newIndexMap[oldIdx] = newIdx;
-                newIdx++;
-            });
-
-            // Actualizar mapeo con nuevos índices
-            Object.entries(faceAssignments).forEach(([faceIdx, sourceIdx]) => {
-                updatedMapping[faceIdx] = newIndexMap[sourceIdx];
-            });
-
-            // Añadir solo las imágenes necesarias
-            sourcesToUse.forEach((file) => {
-                formData.append('sourceImages', file);
-            });
-
-            formData.append('targetImage', targetImageFile);
-            formData.append('consentConfirmed', 'true');
-            formData.append('faceMapping', JSON.stringify(updatedMapping));
+            document.getElementById('loadingText').textContent = 'Preparando imágenes...';
 
             try {
+                // Redimensionar imágenes (Crucial para Render Free)
+                const resizedTarget = await resizeImage(targetImageFile, 800);
+                
+                // Obtener solo las imágenes de origen que se van a usar
+                const usedSourceIndices = [...new Set(Object.values(faceAssignments))];
+                const sourcesToUseResized = await Promise.all(
+                    usedSourceIndices.map(idx => resizeImage(sourceImages[idx], 600))
+                );
+
+                // Crear mapeo actualizado con los nuevos índices
+                const updatedMapping = {};
+                const newIndexMap = {};
+                usedSourceIndices.forEach((oldIdx, newIdx) => {
+                    newIndexMap[oldIdx] = newIdx;
+                });
+
+                Object.entries(faceAssignments).forEach(([faceIdx, sourceIdx]) => {
+                    updatedMapping[faceIdx] = newIndexMap[sourceIdx];
+                });
+
+                const formData = new FormData();
+                sourcesToUseResized.forEach((file) => {
+                    formData.append('sourceImages', file);
+                });
+
+                formData.append('targetImage', resizedTarget);
+                formData.append('consentConfirmed', 'true');
+                formData.append('faceMapping', JSON.stringify(updatedMapping));
+
+                document.getElementById('loadingText').textContent = 'Realizando face swap...';
+
                 const response = await fetch('/api/face-swap-multi', {
                     method: 'POST',
                     body: formData
