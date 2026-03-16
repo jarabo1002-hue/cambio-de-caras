@@ -86,7 +86,7 @@ app.post('/api/face-swap', upload.fields([
 
     // Ejecutar script de Python para face swap
     const pythonScript = path.join(__dirname, 'face_swap.py');
-    const command = `python "${pythonScript}" single "${sourceImagePath}" "${targetImagePath}" "${resultPath}"`;
+    const command = `python3 "${pythonScript}" single "${sourceImagePath}" "${targetImagePath}" "${resultPath}"`;
 
     exec(command, (error, stdout, stderr) => {
       // Limpiar archivos temporales de upload
@@ -183,7 +183,7 @@ app.post('/api/face-swap-multi', upload.fields([
     // Ejecutar script de Python para face swap múltiple
     const pythonScript = path.join(__dirname, 'face_swap.py');
     const sourcesArg = sourceImagePaths.join(',');
-    const command = `python "${pythonScript}" multi "${sourcesArg}" "${targetImagePath}" "${resultPath}" ${mappingArg}`;
+    const command = `python3 "${pythonScript}" multi "${sourcesArg}" "${targetImagePath}" "${resultPath}" ${mappingArg}`;
 
     exec(command, (error, stdout, stderr) => {
       // Limpiar archivos temporales de upload
@@ -299,7 +299,7 @@ app.post('/api/detect-faces', upload.single('image'), (req, res) => {
     const { exec } = require('child_process');
     const pythonScript = path.join(__dirname, 'detect_faces.py');
 
-    exec(`python "${pythonScript}" "${imagePath}"`, {
+    exec(`python3 "${pythonScript}" "${imagePath}"`, {
       maxBuffer: 1024 * 1024 * 10,
       windowsHide: true
     }, (error, stdout, stderr) => {
@@ -319,9 +319,17 @@ app.post('/api/detect-faces', upload.single('image'), (req, res) => {
         });
       }
 
+      if (!stdout || stdout.trim() === '') {
+        return res.status(500).json({
+          error: 'El script de detección no devolvió ningún resultado',
+          details: stderr
+        });
+      }
+
       // Buscar solo el JSON en el output (última línea válida)
       try {
-        const lines = stdout.trim().split('\n');
+        const trimmedStdout = stdout.trim();
+        const lines = trimmedStdout.split('\n');
         let jsonLine = lines[lines.length - 1]; // Tomar última línea
 
         // Intentar parsear

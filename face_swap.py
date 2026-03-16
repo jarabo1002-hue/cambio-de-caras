@@ -110,8 +110,21 @@ def add_watermark(image_path, output_path):
 
 
 def detect_faces(app, img):
-    """Detecta caras en una imagen y las ordena por posición."""
-    faces = app.get(img)
+    """Detecta caras con optimización de memoria."""
+    MAX_DET_DIM = 640
+    h, w = img.shape[:2]
+    if h > MAX_DET_DIM or w > MAX_DET_DIM:
+        scale = MAX_DET_DIM / max(h, w)
+        img_det = cv2.resize(img, (int(w * scale), int(h * scale)))
+        faces = app.get(img_det)
+        # Ajustar coordenadas de vuelta
+        for face in faces:
+            face.bbox *= (1.0 / scale)
+            if hasattr(face, 'kps'):
+                face.kps *= (1.0 / scale)
+    else:
+        faces = app.get(img)
+    
     # Ordenar caras: de izquierda a derecha, luego de arriba a abajo
     faces_sorted = sorted(faces, key=lambda x: (x.bbox[1] // 50 * 50, x.bbox[0]))
     return faces_sorted
@@ -125,7 +138,7 @@ def process_single_face_swap(source_path, target_path, output_path, app, swapper
 
     print("⏳ Inicializando detector de caras...")
     app = FaceAnalysis(name='buffalo_s', providers=['CPUExecutionProvider'])
-    app.prepare(ctx_id=0, det_size=(640, 640))
+    app.prepare(ctx_id=0, det_size=(320, 320))
 
     print("⏳ Cargando modelo de face swapper...")
     try:
@@ -178,24 +191,9 @@ def process_single_face_swap(source_path, target_path, output_path, app, swapper
     # Usar la cara más grande de la imagen de origen
     source_face = sorted(source_faces, key=lambda x: x.bbox[2] * x.bbox[3])[-1]
 
-    # Aplicar face swap con upscaling
-    print("🔄 Aplicando face swap en alta resolución...")
-    orig_h, orig_w = target_img.shape[:2]
-    scale_factor = 2
-    target_img_scaled = cv2.resize(target_img, (orig_w * scale_factor, orig_h * scale_factor), interpolation=cv2.INTER_CUBIC)
-    source_img_scaled = cv2.resize(source_img, (0, 0), fx=scale_factor, fy=scale_factor, interpolation=cv2.INTER_CUBIC)
-
-    source_faces_scaled = detect_faces(app, source_img_scaled)
-    target_faces_scaled = detect_faces(app, target_img_scaled)
-
-    if len(source_faces_scaled) > 0 and len(target_faces_scaled) > 0:
-        print(f"✓ Caras detectadas en versión escalada")
-        source_face_scaled = sorted(source_faces_scaled, key=lambda x: x.bbox[2] * x.bbox[3])[-1]
-        target_face_scaled = sorted(target_faces_scaled, key=lambda x: x.bbox[2] * x.bbox[3])[-1]
-        result = swapper.get(target_img_scaled, target_face_scaled, source_face_scaled, paste_back=True)
-    else:
-        print("⚠ Fallback a resolución original")
-        result = swapper.get(target_img, target_face, source_face, paste_back=True)
+    # Aplicar face swap (Desactivamos upscaling para ahorrar RAM en Render Free)
+    print("🔄 Aplicando face swap...")
+    result = swapper.get(target_img, target_face, source_face, paste_back=True)
 
     temp_output = output_path.replace('.png', '_temp.png')
     cv2.imwrite(temp_output, result, [cv2.IMWRITE_PNG_COMPRESSION, 0])
@@ -235,7 +233,7 @@ def process_multi_face_swap(source_paths, target_path, output_path, face_mapping
 
     print("⏳ Inicializando detector de caras...")
     app = FaceAnalysis(name='buffalo_s', providers=['CPUExecutionProvider'])
-    app.prepare(ctx_id=0, det_size=(640, 640))
+    app.prepare(ctx_id=0, det_size=(320, 320))
 
     print("⏳ Cargando modelo de face swapper...")
     try:

@@ -30,7 +30,7 @@ def download_model():
         from insightface.app import FaceAnalysis
         # Intentamos descargar buffalo_s (ligero para detección) y buffalo_l
         app_s = FaceAnalysis(name='buffalo_s', providers=['CPUExecutionProvider'])
-        app_s.prepare(ctx_id=0, det_size=(640, 640))
+        app_s.prepare(ctx_id=0, det_size=(320, 320))
         
         app_l = FaceAnalysis(name='buffalo_l', providers=['CPUExecutionProvider'])
         app_l.prepare(ctx_id=0, det_size=(640, 640))

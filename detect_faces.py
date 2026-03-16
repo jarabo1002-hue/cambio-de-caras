@@ -31,7 +31,8 @@ def detect_faces(image_path):
 
     # Inicializar detector (usamos buffalo_s por memoria)
     app = FaceAnalysis(name='buffalo_s', providers=['CPUExecutionProvider'], verbose=False)
-    app.prepare(ctx_id=0, det_size=(640, 640))
+    # Reducimos det_size a 320 para ahorrar mucha RAM
+    app.prepare(ctx_id=0, det_size=(320, 320))
 
     # Leer imagen
     img = cv2.imread(image_path)
@@ -39,10 +40,24 @@ def detect_faces(image_path):
         print(json.dumps({"error": "No se pudo leer la imagen"}))
         sys.exit(1)
 
+    # REESCALADO PARA AHORRO DE MEMORIA
+    # Si la imagen es muy grande, InsightFace consumirá demasiada RAM
+    MAX_DIM = 1000
     height, width = img.shape[:2]
+    orig_height, orig_width = height, width
+    
+    if height > MAX_DIM or width > MAX_DIM:
+        scale = MAX_DIM / max(height, width)
+        img = cv2.resize(img, (int(width * scale), int(height * scale)))
+        height, width = img.shape[:2]
+        # sys.stderr.write(f"Resized for detection to {width}x{height}\n")
 
     # Detectar caras
     faces = app.get(img)
+
+    # Ajustar coordenadas si hubo reescalado
+    scale_x = orig_width / width
+    scale_y = orig_height / height
 
     # Preparar resultado
     faces_info = []
@@ -51,19 +66,19 @@ def detect_faces(image_path):
         faces_info.append({
             "index": i,
             "bbox": {
-                "x": int(bbox[0]),
-                "y": int(bbox[1]),
-                "width": int(bbox[2] - bbox[0]),
-                "height": int(bbox[3] - bbox[1])
+                "x": int(bbox[0] * scale_x),
+                "y": int(bbox[1] * scale_y),
+                "width": int((bbox[2] - bbox[0]) * scale_x),
+                "height": int((bbox[3] - bbox[1]) * scale_y)
             },
             "confidence": float(face.det_score),
-            "landmarks": face.kps.tolist() if hasattr(face, 'kps') else [],
+            "landmarks": (face.kps * [scale_x, scale_y]).tolist() if hasattr(face, 'kps') else [],
             "gender": int(face.gender) if hasattr(face, 'gender') else 0,
             "age": int(face.age) if hasattr(face, 'age') else 0
         })
 
     # Ordenar caras: de izquierda a derecha, luego de arriba a abajo
-    faces_info.sort(key=lambda f: (f['bbox']['y'] // 50 * 50, f['bbox']['x']))
+    faces_info.sort(key=lambda f: (f['bbox']['y'] // 100 * 100, f['bbox']['x']))
 
     # Re-indexar después de ordenar
     for i, face in enumerate(faces_info):
@@ -71,8 +86,8 @@ def detect_faces(image_path):
 
     result = {
         "faces": faces_info,
-        "width": width,
-        "height": height,
+        "width": orig_width,
+        "height": orig_height,
         "facesCount": len(faces_info)
     }
 
