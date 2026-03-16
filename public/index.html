@@ -692,19 +692,24 @@
     <script>
         // Variables globales
         let ageVerified = false;
+        // URL del backend - Llamar DIRECTAMENTE a Render para evitar timeout de Vercel
+        const BACKEND_URL = 'https://face-swap-app-9dz7.onrender.com';
+
         let targetImageFile = null;
         let sourceImages = [];
         let detectedFaces = [];
         let selectedSourceIndex = null;
         let faceAssignments = {}; // { faceIndex: sourceIndex }
 
-        // Verificar edad
+        // Warm-up: Despertar el servidor de Render al cargar la página
         document.addEventListener('DOMContentLoaded', () => {
             const verified = localStorage.getItem('ageVerified');
             if (verified === 'true') {
                 document.getElementById('ageVerification').style.display = 'none';
                 ageVerified = true;
             }
+            // Ping silencioso para despertar Render (cold start de 30-50s)
+            fetch(`${BACKEND_URL}/api/health`).catch(() => {});
         });
 
         function confirmAge(isOver18) {
@@ -801,7 +806,9 @@
             formData.append('image', resizedImage);
 
             try {
-                const response = await fetch('/api/detect-faces', {
+                // Despertar el servidor si está dormido
+                document.getElementById('loadingText').textContent = 'Conectando con el servidor...';
+                const response = await fetch(`${BACKEND_URL}/api/detect-faces`, {
                     method: 'POST',
                     body: formData
                 });
@@ -1157,7 +1164,7 @@
 
                 document.getElementById('loadingText').textContent = 'Realizando face swap...';
 
-                const response = await fetch('/api/face-swap-multi', {
+                const response = await fetch(`${BACKEND_URL}/api/face-swap-multi`, {
                     method: 'POST',
                     body: formData
                 });
