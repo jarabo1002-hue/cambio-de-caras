@@ -32,11 +32,17 @@ def detect_faces(image_path):
     # REESCALADO PARA AHORRO DE MEMORIA
     sys.stderr.write(f"--- Iniciando detección para {image_path} ---\n")
     
-    # Inicializar detector (usamos buffalo_s por memoria)
-    sys.stderr.write("Cargando FaceAnalysis (buffalo_s)...\n")
-    app = FaceAnalysis(name='buffalo_s', providers=['CPUExecutionProvider'], verbose=False)
+    # Inicializar detector (usamos buffalo_s por memoria y SOLO detección)
+    sys.stderr.write("Cargando FaceAnalysis (SOLO detección)...\n")
+    # allowed_modules=['detection'] evita cargar modelos de reconocimiento, género y edad
+    app = FaceAnalysis(
+        name='buffalo_s', 
+        providers=['CPUExecutionProvider'], 
+        allowed_modules=['detection'],
+        verbose=False
+    )
     
-    # Reducimos det_size a 320 para ahorrar mucha RAM
+    # Reducimos det_size a 320 para ahorrar mucha RAM y tiempo
     sys.stderr.write("Preparando app (det_size=320)...\n")
     app.prepare(ctx_id=0, det_size=(320, 320))
 
@@ -49,7 +55,7 @@ def detect_faces(image_path):
         sys.exit(1)
 
     # REESCALADO PARA AHORRO DE MEMORIA
-    MAX_DIM = 800 # Bajamos de 1000 a 800 para más seguridad
+    MAX_DIM = 640 # Bajamos de 800 a 640 para máxima velocidad y mínima RAM
     height, width = img.shape[:2]
     orig_height, orig_width = height, width
     
@@ -82,8 +88,8 @@ def detect_faces(image_path):
             },
             "confidence": float(face.det_score),
             "landmarks": (face.kps * [scale_x, scale_y]).tolist() if hasattr(face, 'kps') else [],
-            "gender": int(face.gender) if hasattr(face, 'gender') else 0,
-            "age": int(face.age) if hasattr(face, 'age') else 0
+            "gender": 0, # Ignorado por velocidad
+            "age": 0     # Ignorado por velocidad
         })
 
     # Ordenar caras: de izquierda a derecha, luego de arriba a abajo
