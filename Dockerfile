@@ -1,34 +1,51 @@
+# Face Swap Ético - Docker Optimizado
+# Versión: Local-only
+
 FROM python:3.10-slim
 
+# Instalar dependencias del sistema necesarias
 RUN apt-get update && apt-get install -y \
     curl \
-        gnupg \
-            libgl1 \
-                libglib2.0-0 \
-                    libsm6 \
-                        libxext6 \
-                            build-essential \
-                                python3-dev \
-                                    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-                                        && apt-get install -y nodejs \
-                                            && rm -rf /var/lib/apt/lists/*
+    gnupg \
+    libgl1 \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender1 \
+    libgomp1 \
+    gcc \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs \
+    && apt-get clean
 
-                                            WORKDIR /app
+# Establecer directorio de trabajo
+WORKDIR /app
 
-                                            COPY package*.json ./
-                                            COPY requirements.txt ./
+# Copiar e instalar dependencias de Node
+COPY package*.json ./
+RUN npm install --production
 
-                                            RUN npm install --production
-                                            RUN pip install --no-cache-dir -r requirements.txt
+# Copiar e instalar dependencias de Python
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
 
-                                            COPY download_model.py .
-                                            RUN python download_model.py
+# Descargar modelo
+COPY download_model.py .
+RUN python download_model.py
 
-                                            COPY . .
+# Copiar el resto del código
+COPY . .
 
-                                            RUN mkdir -p uploads results && chmod 777 uploads results
+# Crear directorios para archivos temporales
+RUN mkdir -p uploads results && chmod 777 uploads results
 
-                                            EXPOSE 3000
+# Exponer puerto
+EXPOSE 3000
 
-                                            CMD ["npm", "start"]
-                                            
+# Variables de entorno
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# Comando de inicio
+CMD ["node", "server.js"]

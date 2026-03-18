@@ -1,10 +1,62 @@
-node_modules
-npm-debug.log
-uploads/*
-results/*
+# Git
 .git
+.gitignore
+
+# Node modules
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+*.egg-info/
+.venv
+
+# Environment variables
 .env
-.vscode
-*.onnx
-# El modelo ONNX lo manejaremos aparte o lo quitaremos de aquí si quieres subirlo
-# pero por ahora lo ignoramos para que el build sea rápido.
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+
+# Archivos temporales
+*.tmp
+*.temp
+
+# Documentos (no necesarios en Docker)
+*.md
+!README.md
+COMO_EJECUTAR.md
+INICIO_RAPIDO.md
+
+# Scripts locales
+*.bat
+iniciar.sh
+subir-a-github.bat
+
+# Config de servicios en la nube
+render.yaml
+railway.json
+nixpacks.toml
+vercel.json
+
+# Tests
+test_images/
+create_test_images.py

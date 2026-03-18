@@ -1,14 +1,25 @@
 version: '3.8'
 
 services:
-  face-swap-app:
-    build: .
+  face-swap:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: face-swap-ethical
     ports:
       - "3000:3000"
     volumes:
+      # Montar directorios temporales fuera del contenedor
       - ./uploads:/app/uploads
       - ./results:/app/results
     environment:
-      - PORT=3000
       - NODE_ENV=production
-    restart: always
+      - PORT=3000
+    restart: unless-stopped
+    # Limitar recursos para evitar uso excesivo
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
