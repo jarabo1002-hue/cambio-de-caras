@@ -7,22 +7,18 @@ __pycache__/
 *$py.class
 *.so
 .Python
-env/
 venv/
-ENV/
-.venv
+env/
+*.egg-info/
 
-# Archivos temporales
-uploads/
-results/
-*.tmp
-
-# Variables de entorno
+# Environment variables
 .env
 
-# Logs
-*.log
-npm-debug.log*
+# Uploads y resultados (temporales)
+uploads/*
+!uploads/.gitkeep
+results/*
+!results/.gitkeep
 
 # IDE
 .vscode/
@@ -33,6 +29,15 @@ npm-debug.log*
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# Modelo ONNX (grande, mejor descargarlo aparte)
+# Logs
+*.log
+npm-debug.log*
+
+# Modelo ONNX (se descarga localmente)
 *.onnx
+
+# Archivos temporales
+*.tmp
+*.temp
